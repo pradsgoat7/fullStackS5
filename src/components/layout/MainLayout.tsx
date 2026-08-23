@@ -9,7 +9,7 @@ export const MainLayout: React.FC = () => {
   return (
     <div className="min-h-screen bg-[#F8FAFC] flex text-gray-900 font-sans">
       {/* Sidebar Navigation */}
-      <Sidebar 
+      <Sidebar
         isMobileOpen={isMobileSidebarOpen}
         onCloseMobile={() => setIsMobileSidebarOpen(false)}
       />
@@ -17,7 +17,7 @@ export const MainLayout: React.FC = () => {
       {/* Main Content Area */}
       <div className="flex-1 flex flex-col min-w-0">
         {/* Top Navbar */}
-        <Navbar 
+        <Navbar
           onToggleSidebar={() => setIsMobileSidebarOpen((prev) => !prev)}
         />
 
