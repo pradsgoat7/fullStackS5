@@ -7,7 +7,7 @@ export const DashboardPage: React.FC = () => {
       {/* Welcome Section */}
       <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h2 className="text-xl font-bold text-slate-900 tracking-tight">Welcome back, Alex! 👋</h2>
+          <h2 className="text-xl font-bold text-slate-900 tracking-tight">Welcome back, Pradnyesh! 👋</h2>
           <p className="text-slate-500 text-sm mt-1">Here is the live status of the college canteen right now.</p>
         </div>
         <div className="flex items-center gap-3">

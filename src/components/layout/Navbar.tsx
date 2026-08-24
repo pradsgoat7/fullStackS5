@@ -59,9 +59,9 @@ export const Navbar: React.FC<NavbarProps> = ({ onToggleSidebar }) => {
           </div>
           <div className="hidden lg:block text-left">
             <span className="text-sm font-semibold text-gray-900 block leading-tight group-hover:text-orange-600 transition-colors">
-              Alex Student
+              Pradnyesh Student
             </span>
-            <span className="text-[11px] text-gray-400 font-medium block">Computer Eng.</span>
+            <span className="text-[11px] text-gray-400 font-medium block">INFT Eng.</span>
           </div>
           <ChevronDown className="w-4 h-4 text-gray-400 hidden lg:block group-hover:text-gray-600 transition-colors" />
         </div>
