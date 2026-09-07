@@ -91,3 +91,20 @@ Scope for this experiment:
 - Forms with validation (Pre-Order checkout)
 
 Do not implement backend functionality.
+
+---
+
+## Experiment 3
+
+For Experiment 3,
+
+- Do NOT create APIs.
+- Do NOT connect MongoDB.
+- Do NOT implement real authentication.
+- Use the Context API (not Redux) to manage shared state.
+
+Scope for this experiment:
+
+- Manage cart state globally with Context API, replacing the per-page `useCart` hook so cart contents stay in sync across the Dashboard and Menu pages.
+
+Do not implement backend functionality.

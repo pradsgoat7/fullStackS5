@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Users, Clock, Armchair, ArrowUpRight, Flame, BellRing, Search, ShoppingBag, Trash2, CheckCircle2 } from 'lucide-react';
-import { useCart } from '../hooks/useCart';
+import { useCart } from '../context/CartContext';
 import { useMenuItems } from '../hooks/useMenuItems';
 import { CheckoutForm, type CheckoutFormValues } from '../components/cart/CheckoutForm';
 
