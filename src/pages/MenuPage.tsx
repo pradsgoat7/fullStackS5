@@ -9,7 +9,7 @@ export const MenuPage: React.FC = () => {
     const [searchQuery, setSearchQuery] = useState('');
     const [selectedCategory, setSelectedCategory] = useState('All');
 
-    const categories = ['All', 'Quick Bites', 'South Indian', 'Meals & Thalis', 'Beverages'];
+    const categories = ['All', 'Quick Bites', 'South Indian', 'Meals & Thalis', 'Chinese', 'Healthy', 'Beverages', 'Desserts'];
 
     const filteredItems = menuItems.filter((item) => {
         const matchesSearch = item.name.toLowerCase().includes(searchQuery.toLowerCase());
