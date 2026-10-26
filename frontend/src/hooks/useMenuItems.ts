@@ -10,8 +10,6 @@ export const useMenuItems = () => {
 
     useEffect(() => {
         let isMounted = true;
-        setIsLoading(true);
-        setError(null);
 
         const timer = setTimeout(() => {
             if (!isMounted) return;

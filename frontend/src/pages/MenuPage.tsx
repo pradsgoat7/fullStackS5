@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Search, UtensilsCrossed, Sparkles } from 'lucide-react';
-import { useCart } from '../context/CartContext';
+import { useCart } from '../hooks/useCart';
 import { useMenuItems } from '../hooks/useMenuItems';
 
 export const MenuPage: React.FC = () => {

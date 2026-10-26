@@ -7,9 +7,12 @@ import {
   Clock, 
   User, 
   X,
-  Flame
+  Flame,
+  ShieldCheck,
+  MessagesSquare
 } from 'lucide-react';
 import type { NavItem } from '../../types/navigation';
+import { useAuth } from '../../hooks/useAuth';
 
 interface SidebarProps {
   isMobileOpen: boolean;
@@ -30,6 +33,12 @@ const navItems: NavItem[] = [
     icon: Utensils,
   },
   {
+    id: 'chat',
+    label: 'Live Chat',
+    path: '/chat',
+    icon: MessagesSquare,
+  },
+  {
     id: 'my-orders',
     label: 'My Orders',
     path: '/my-orders',
@@ -48,9 +57,19 @@ const navItems: NavItem[] = [
     path: '/profile',
     icon: User,
   },
+  {
+    id: 'admin',
+    label: 'Admin Panel',
+    path: '/admin',
+    icon: ShieldCheck,
+    roles: ['admin'],
+  },
 ];
 
 export const Sidebar: React.FC<SidebarProps> = ({ isMobileOpen, onCloseMobile }) => {
+  const { user } = useAuth();
+  const visibleItems = navItems.filter((item) => !item.roles || (user && item.roles.includes(user.role)));
+
   return (
     <>
       {/* Mobile Backdrop Overlay */}
@@ -67,7 +86,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isMobileOpen, onCloseMobile })
         className={`
           fixed top-0 bottom-0 left-0 z-50 w-60 bg-white border-r border-gray-100 flex flex-col justify-between
           transition-transform duration-300 ease-in-out
-          md:translate-x-0 md:static md:z-auto
+          md:translate-x-0 md:sticky md:h-screen md:z-auto
           ${isMobileOpen ? 'translate-x-0' : '-translate-x-full'}
         `}
       >
@@ -96,7 +115,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isMobileOpen, onCloseMobile })
 
           {/* Navigation Items */}
           <nav className="p-4 space-y-1.5">
-            {navItems.map((item) => {
+            {visibleItems.map((item) => {
               const Icon = item.icon;
               return (
                 <NavLink
@@ -104,7 +123,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isMobileOpen, onCloseMobile })
                   to={item.path}
                   onClick={onCloseMobile}
                   className={({ isActive }) => `
-                    flex items-center justify-between px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200
+                    group flex items-center justify-between px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200
                     ${isActive 
                       ? 'bg-orange-500 text-white shadow-md shadow-orange-500/20' 
                       : 'text-gray-600 hover:bg-orange-50 hover:text-orange-600'

@@ -1,12 +1,18 @@
 import React from 'react';
 import { AppRoutes } from './routes/AppRoutes';
-import { CartProvider } from './context/CartContext';
+import { AuthProvider } from './context/AuthProvider';
+import { SocketProvider } from './context/SocketProvider';
+import { CartProvider } from './context/CartProvider';
 
 const App: React.FC = () => {
   return (
-    <CartProvider>
-      <AppRoutes />
-    </CartProvider>
+    <AuthProvider>
+      <SocketProvider>
+        <CartProvider>
+          <AppRoutes />
+        </CartProvider>
+      </SocketProvider>
+    </AuthProvider>
   );
 };
 

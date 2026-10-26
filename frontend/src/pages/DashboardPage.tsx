@@ -1,12 +1,21 @@
 import React, { useState } from 'react';
-import { Users, Clock, Armchair, ArrowUpRight, Flame, BellRing, Search, ShoppingBag, Trash2, CheckCircle2 } from 'lucide-react';
-import { useCart } from '../context/CartContext';
+import { Link } from 'react-router-dom';
+import { Users, Clock, Armchair, ArrowUpRight, Flame, Search, ShoppingBag, Trash2, CheckCircle2 } from 'lucide-react';
+import { useCart } from '../hooks/useCart';
 import { useMenuItems } from '../hooks/useMenuItems';
+import { useAuth } from '../hooks/useAuth';
+import { useProtectedData } from '../hooks/useProtectedData';
+import type { AuthUser } from '../types/auth';
 import { CheckoutForm, type CheckoutFormValues } from '../components/cart/CheckoutForm';
+import { LiveAnnouncements } from '../components/realtime/LiveAnnouncements';
 
 export const DashboardPage: React.FC = () => {
   const { cart, addToCart, removeFromCart, clearCart, totalItemsCount, totalPrice } = useCart();
   const { items: menuItems, isLoading, error } = useMenuItems();
+  const { user } = useAuth();
+  // Server-verified session: an expired token here sends the user back to login
+  const dashboard = useProtectedData<{ message: string; user: AuthUser }>('/api/dashboard');
+  const firstName = (dashboard.data?.user.name ?? user?.name ?? '').split(' ')[0];
   const [searchQuery, setSearchQuery] = useState('');
   const [isPlacingOrder, setIsPlacingOrder] = useState(false);
   const [confirmedOrder, setConfirmedOrder] = useState<{ token: string; name: string } | null>(null);
@@ -32,7 +41,7 @@ export const DashboardPage: React.FC = () => {
       {/* Welcome Section */}
       <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h2 className="text-xl font-bold text-slate-900 tracking-tight">Welcome back, Pradnyesh! 👋</h2>
+          <h2 className="text-xl font-bold text-slate-900 tracking-tight">Welcome back, {firstName}! 👋</h2>
           <p className="text-slate-500 text-sm mt-1">Here is the live status of the college canteen right now.</p>
         </div>
         <div className="flex items-center gap-3">
@@ -110,9 +119,9 @@ export const DashboardPage: React.FC = () => {
               <Flame className="w-5 h-5 text-orange-500" />
               Popular Quick Bites
             </h3>
-            <button className="text-sm font-semibold text-orange-600 hover:text-orange-700 flex items-center gap-1">
+            <Link to="/menu" className="text-sm font-semibold text-orange-600 hover:text-orange-700 flex items-center gap-1">
               View Full Menu <ArrowUpRight className="w-4 h-4" />
-            </button>
+            </Link>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -223,18 +232,8 @@ export const DashboardPage: React.FC = () => {
 
       </div>
 
-      {/* Announcements Section */}
-      <div className="bg-orange-50/50 border border-orange-100 p-5 rounded-2xl flex items-start gap-4">
-        <div className="p-2 bg-orange-500 text-white rounded-xl shadow-sm">
-          <BellRing className="w-5 h-5" />
-        </div>
-        <div>
-          <h4 className="text-sm font-bold text-slate-900">Canteen Broadcast Announcement</h4>
-          <p className="text-xs text-slate-600 mt-1">
-            "Special South Indian Thali available today between 1:00 PM and 2:30 PM. Pre-orders are now live!"
-          </p>
-        </div>
-      </div>
+      {/* Announcements: loaded from the API and updated live over Socket.IO */}
+      <LiveAnnouncements />
     </div>
   );
 };
