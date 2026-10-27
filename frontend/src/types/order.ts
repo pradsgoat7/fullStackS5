@@ -3,7 +3,7 @@ export type OrderStatus = 'placed' | 'preparing' | 'ready' | 'collected' | 'canc
 export const ACTIVE_STATUSES: OrderStatus[] = ['placed', 'preparing', 'ready'];
 
 // Must match PICKUP_SLOTS in backend/models/Order.js
-export const PICKUP_SLOTS = ['ASAP (Next Available)', '12:30 PM - 1:00 PM', '1:00 PM - 1:30 PM', '1:30 PM - 2:00 PM'];
+export const PICKUP_SLOTS = ['ASAP (Next Available)', '12:30 PM - 1:00 PM', '1:00 PM - 1:30 PM', '1:30 PM - 2:00 PM', '5:00 PM - 6:00 PM'];
 
 export interface OrderItem {
     food: string;

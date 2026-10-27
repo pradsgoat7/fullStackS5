@@ -2,7 +2,7 @@ const mongoose = require("mongoose");
 
 const ORDER_STATUSES = ["placed", "preparing", "ready", "collected", "cancelled"];
 const ACTIVE_STATUSES = ["placed", "preparing", "ready"];
-const PICKUP_SLOTS = ["ASAP (Next Available)", "12:30 PM - 1:00 PM", "1:00 PM - 1:30 PM", "1:30 PM - 2:00 PM"];
+const PICKUP_SLOTS = ["ASAP (Next Available)", "12:30 PM - 1:00 PM", "1:00 PM - 1:30 PM", "1:30 PM - 2:00 PM", "5:00 PM - 6:00 PM"];
 
 // Name and price are copied from the menu when the order is placed, so later
 // menu changes never alter what a student was charged

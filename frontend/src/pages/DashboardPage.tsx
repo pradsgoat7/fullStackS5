@@ -70,7 +70,7 @@ export const DashboardPage: React.FC = () => {
         <div className="flex items-center gap-3">
           <div className="bg-emerald-50 text-emerald-700 border border-emerald-200 px-3.5 py-1.5 rounded-full text-xs font-semibold flex items-center gap-2">
             <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-            Canteen Open • Closes at 5:00 PM
+            Canteen Open • Closes at 6:00 PM
           </div>
         </div>
       </div>
