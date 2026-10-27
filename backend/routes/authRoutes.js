@@ -105,4 +105,46 @@ router.get("/profile", protect, (req, res) => {
   res.status(200).json({ user: req.user });
 });
 
+// 4. UPDATE PROFILE (name only; email and role can't be changed here)
+router.put(
+  "/profile",
+  protect,
+  body("name")
+    .isString().withMessage("Name is required")
+    .trim()
+    .notEmpty().withMessage("Name is required")
+    .isLength({ max: 50 }).withMessage("Name must be at most 50 characters"),
+  validate,
+  async (req, res) => {
+    req.user.name = req.body.name;
+    await req.user.save();
+    res.status(200).json({ message: "Profile updated", user: req.user });
+  }
+);
+
+// 5. CHANGE PASSWORD
+router.put(
+  "/password",
+  protect,
+  authLimiter,
+  [
+    body("currentPassword").isString().notEmpty().withMessage("Current password is required"),
+    body("newPassword")
+      .isString().withMessage("New password is required")
+      .isLength({ min: 8, max: 72 }).withMessage("Password must be 8 to 72 characters")
+      .matches(/[A-Za-z]/).withMessage("Password must contain a letter")
+      .matches(/\d/).withMessage("Password must contain a number")
+  ],
+  validate,
+  async (req, res) => {
+    const user = await User.findById(req.user._id).select("+password");
+    if (!(await user.comparePassword(req.body.currentPassword))) {
+      return res.status(401).json({ message: "Current password is incorrect" });
+    }
+    user.password = req.body.newPassword; // hashed by the model's pre-save hook
+    await user.save();
+    res.status(200).json({ message: "Password changed" });
+  }
+);
+
 module.exports = router;

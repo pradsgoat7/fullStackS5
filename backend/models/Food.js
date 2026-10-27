@@ -27,6 +27,24 @@ const foodSchema = new mongoose.Schema(
       type: Number,
       required: true,
       min: 0
+    },
+    // Display details for the menu cards
+    image: {
+      type: String,
+      trim: true
+    },
+    prepTime: {
+      type: Number, // minutes
+      min: 0
+    },
+    tag: {
+      type: String,
+      trim: true,
+      maxlength: 30
+    },
+    available: {
+      type: Boolean,
+      default: true
     }
   },
   {

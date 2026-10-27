@@ -13,6 +13,7 @@ import {
 } from 'lucide-react';
 import type { NavItem } from '../../types/navigation';
 import { useAuth } from '../../hooks/useAuth';
+import { useOrders } from '../../hooks/useOrders';
 
 interface SidebarProps {
   isMobileOpen: boolean;
@@ -43,7 +44,6 @@ const navItems: NavItem[] = [
     label: 'My Orders',
     path: '/my-orders',
     icon: ShoppingBag,
-    badge: '1',
   },
   {
     id: 'order-history',
@@ -68,6 +68,7 @@ const navItems: NavItem[] = [
 
 export const Sidebar: React.FC<SidebarProps> = ({ isMobileOpen, onCloseMobile }) => {
   const { user } = useAuth();
+  const { activeOrders } = useOrders();
   const visibleItems = navItems.filter((item) => !item.roles || (user && item.roles.includes(user.role)));
 
   return (
@@ -115,7 +116,9 @@ export const Sidebar: React.FC<SidebarProps> = ({ isMobileOpen, onCloseMobile })
 
           {/* Navigation Items */}
           <nav className="p-4 space-y-1.5">
-            {visibleItems.map((item) => {
+            {visibleItems.map((navItem) => {
+              // My Orders shows how many orders are still in progress
+              const item = navItem.id === 'my-orders' && activeOrders.length > 0 ? { ...navItem, badge: activeOrders.length } : navItem;
               const Icon = item.icon;
               return (
                 <NavLink

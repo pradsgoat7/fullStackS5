@@ -60,6 +60,11 @@ module.exports = (io) => {
     const { user } = socket.data;
     log(`Client connected: ${socket.id} (${user.name}, ${user.role})`);
     socket.join(CHAT_ROOM);
+    // Personal room for this user's order updates; canteen staff also get every new order
+    socket.join(`user:${user.id}`);
+    if (user.role === "admin" || user.role === "staff") {
+      socket.join("staff");
+    }
 
     broadcastPresence(io).catch((error) => console.error(error));
 

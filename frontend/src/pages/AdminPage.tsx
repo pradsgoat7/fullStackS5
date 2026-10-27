@@ -2,6 +2,7 @@ import React from 'react';
 import { ShieldCheck, GraduationCap, UserCog, Utensils, PackageX, type LucideIcon } from 'lucide-react';
 import { useProtectedData } from '../hooks/useProtectedData';
 import { AnnouncementForm } from '../components/realtime/AnnouncementForm';
+import { OrdersBoard } from '../components/orders/OrdersBoard';
 import type { AuthUser, Role } from '../types/auth';
 
 interface AdminResponse {
@@ -62,6 +63,8 @@ export const AdminPage: React.FC = () => {
         <StatCard label="Menu Items" value={stats?.foodItems} icon={Utensils} tint="bg-emerald-50 text-emerald-600" />
         <StatCard label="Low Stock" value={stats?.lowStockItems} icon={PackageX} tint="bg-red-50 text-red-500" />
       </div>
+
+      <OrdersBoard />
 
       <AnnouncementForm />
 

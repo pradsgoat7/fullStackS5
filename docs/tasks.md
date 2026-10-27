@@ -145,3 +145,18 @@
 - [x] Vercel config for the frontend (`frontend/vercel.json`, SPA routing)
 - [ ] Backend live on Render with MongoDB Atlas
 - [ ] Frontend live on Vercel
+
+---
+
+# Orders, Order Tracking & Profile
+
+- [x] `Order` model; orders saved in MongoDB with a server-generated pickup token
+- [x] Menu loaded from the database (`/api/foods`); prices and stock always checked on the server
+- [x] Stock reserved when ordering and restored on cancel; sold-out / low-stock labels on the menu
+- [x] My Orders: live status tracker (placed → preparing → ready) over Socket.IO, cancel while "placed"
+- [x] Order History: collected and cancelled orders with totals
+- [x] Profile: details, order stats, edit name, change password
+- [x] Admin live order queue to move orders through each status
+- [x] Dashboard queue length and waiting time from real orders; active-order banner
+- [x] Shared `FoodCard` component replaces the duplicated menu card markup
+- [x] API tests for orders and profile (23 tests)

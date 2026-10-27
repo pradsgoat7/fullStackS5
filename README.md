@@ -7,9 +7,11 @@ Development mini-project (Pradnyesh Patil, D15B).
 ## Features
 
 - **Dashboard** with live queue length, waiting time and seat availability
-- **Menu** with categories, search and a pre-order cart with pickup tokens
+- **Menu** from the database with categories, search, live stock and a pre-order cart
+- **Orders**: real pre-orders with pickup tokens, live status tracking (My Orders), order history and cancellation
+- **Profile**: account details, order stats, edit name and change password
 - **Accounts**: register / login with JWT, roles (student, staff, admin), protected pages
-- **Admin Panel**: user list, menu stats, and live announcements to every student
+- **Admin Panel**: live order queue, user list, menu stats, and live announcements to every student
 - **Live Chat** between students and canteen staff (Socket.IO) with presence and typing indicators
 - **Secure API**: bcrypt, JWT, validation, rate limiting, helmet, CORS, NoSQL-injection protection
 
@@ -26,7 +28,7 @@ Development mini-project (Pradnyesh Patil, D15B).
 
 ```bash
 # Backend (needs MongoDB; copy backend/.env.example to backend/.env first)
-cd backend && npm install && npm run seed:admin && npm run dev
+cd backend && npm install && npm run seed:admin && npm run seed:menu && npm run dev
 
 # Frontend (set VITE_API_URL if the API is not on http://localhost:5001)
 cd frontend && npm install && npm run dev

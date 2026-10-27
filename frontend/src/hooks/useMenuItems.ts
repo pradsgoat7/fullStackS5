@@ -1,8 +1,20 @@
 import { useEffect, useState } from 'react';
-import { mockMenuItems, type MenuItem } from '../data/menuItems';
+import { apiRequest } from '../lib/api';
+import type { MenuItem } from '../types/menu';
 
-const MOCK_NETWORK_DELAY_MS = 600;
+interface FoodResponse {
+    _id: string;
+    name: string;
+    category: string;
+    price: number;
+    stock: number;
+    prepTime?: number;
+    tag?: string;
+    image?: string;
+    available?: boolean;
+}
 
+// Loads the live menu (prices and stock) from the public /api/foods endpoint
 export const useMenuItems = () => {
     const [items, setItems] = useState<MenuItem[]>([]);
     const [isLoading, setIsLoading] = useState(true);
@@ -11,20 +23,29 @@ export const useMenuItems = () => {
     useEffect(() => {
         let isMounted = true;
 
-        const timer = setTimeout(() => {
-            if (!isMounted) return;
-
-            if (!mockMenuItems.length) {
-                setError('No menu items available right now.');
-            } else {
-                setItems(mockMenuItems);
-            }
-            setIsLoading(false);
-        }, MOCK_NETWORK_DELAY_MS);
+        apiRequest<FoodResponse[]>('/api/foods')
+            .then((foods) => {
+                if (!isMounted) return;
+                const menu = foods
+                    .filter((food) => food.available !== false)
+                    .map(({ _id, name, category, price, stock, prepTime, tag, image }) => ({
+                        id: _id, name, category, price, stock, prepTime, tag, image,
+                    }));
+                if (menu.length === 0) {
+                    setError('No menu items available right now.');
+                } else {
+                    setItems(menu);
+                }
+            })
+            .catch((err: unknown) => {
+                if (isMounted) setError(err instanceof Error ? err.message : 'Could not load the menu');
+            })
+            .finally(() => {
+                if (isMounted) setIsLoading(false);
+            });
 
         return () => {
             isMounted = false;
-            clearTimeout(timer);
         };
     }, []);
 

@@ -3,7 +3,9 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { MainLayout } from '../components/layout/MainLayout';
 import { DashboardPage } from '../pages/DashboardPage';
 import { MenuPage } from '../pages/MenuPage';
-import { PlaceholderPage } from '../pages/PlaceholderPage';
+import { MyOrdersPage } from '../pages/MyOrdersPage';
+import { OrderHistoryPage } from '../pages/OrderHistoryPage';
+import { ProfilePage } from '../pages/ProfilePage';
 import { LoginPage } from '../pages/LoginPage';
 import { RegisterPage } from '../pages/RegisterPage';
 import { AdminPage } from '../pages/AdminPage';
@@ -28,9 +30,9 @@ export const AppRoutes: React.FC = () => {
             <Route path="/dashboard" element={<Navigate to="/" replace />} />
             <Route path="/menu" element={<MenuPage />} />
             <Route path="/chat" element={<ChatPage />} />
-            <Route path="/my-orders" element={<PlaceholderPage title="My Orders" />} />
-            <Route path="/order-history" element={<PlaceholderPage title="Order History" />} />
-            <Route path="/profile" element={<PlaceholderPage title="Profile" />} />
+            <Route path="/my-orders" element={<MyOrdersPage />} />
+            <Route path="/order-history" element={<OrderHistoryPage />} />
+            <Route path="/profile" element={<ProfilePage />} />
 
             {/* Admin only */}
             <Route element={<ProtectedRoute roles={['admin']} />}>

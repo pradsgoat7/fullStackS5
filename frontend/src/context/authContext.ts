@@ -10,6 +10,8 @@ export interface AuthContextValue {
     login: (email: string, password: string) => Promise<void>;
     register: (name: string, email: string, password: string) => Promise<void>;
     logout: (notice?: string) => void;
+    /** Replace the stored user after a profile update */
+    updateUser: (user: AuthUser) => void;
 }
 
 export const AuthContext = createContext<AuthContextValue | undefined>(undefined);

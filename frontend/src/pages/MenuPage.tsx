@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Search, UtensilsCrossed, Sparkles } from 'lucide-react';
 import { useCart } from '../hooks/useCart';
 import { useMenuItems } from '../hooks/useMenuItems';
+import { FoodCard } from '../components/menu/FoodCard';
 
 export const MenuPage: React.FC = () => {
     const { addToCart } = useCart();
@@ -29,7 +30,7 @@ export const MenuPage: React.FC = () => {
                     <p className="text-slate-500 text-sm mt-1">Browse items by category, check prep times, and pre-order instantly.</p>
                 </div>
                 <div className="bg-orange-50 text-orange-600 border border-orange-200 px-3.5 py-1.5 rounded-full text-xs font-semibold flex items-center gap-2">
-                    <Sparkles className="w-4 h-4" /> Live Inventory Sync
+                    <Sparkles className="w-4 h-4" /> Live stock from the canteen
                 </div>
             </div>
 
@@ -83,32 +84,7 @@ export const MenuPage: React.FC = () => {
             ) : (
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 {filteredItems.length > 0 ? (
-                    filteredItems.map((item) => (
-                        <div key={item.id} className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm hover:shadow-md transition-shadow flex flex-col justify-between">
-                            <div>
-                                <div className="h-40 w-full overflow-hidden relative">
-                                    <img src={item.image} alt={item.name} className="w-full h-full object-cover hover:scale-105 transition-transform duration-300" />
-                                    <span className="absolute top-3 left-3 text-[10px] font-bold tracking-wider uppercase bg-white/90 backdrop-blur-sm text-orange-600 px-2.5 py-1 rounded-full shadow-sm">
-                                        {item.tag}
-                                    </span>
-                                </div>
-                                <div className="p-4">
-                                    <span className="text-[11px] font-semibold text-orange-600 uppercase tracking-wider">{item.category}</span>
-                                    <h4 className="font-semibold text-slate-900 text-base mt-0.5">{item.name}</h4>
-                                    <span className="text-xs font-medium text-slate-400">{item.time} prep time</span>
-                                </div>
-                            </div>
-                            <div className="p-4 pt-0 flex items-center justify-between border-t border-slate-100 mt-2">
-                                <span className="text-lg font-bold text-slate-900">{item.price}</span>
-                                <button
-                                    onClick={() => addToCart(item)}
-                                    className="bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-xl text-xs font-semibold shadow-sm shadow-orange-500/25 transition-all active:scale-95"
-                                >
-                                    Pre-Order
-                                </button>
-                            </div>
-                        </div>
-                    ))
+                    filteredItems.map((item) => <FoodCard key={item.id} item={item} onAdd={addToCart} detailed />)
                 ) : (
                     <div className="col-span-3 text-center py-12 bg-white rounded-2xl border border-slate-200">
                         <p className="text-slate-500 text-sm font-medium">No menu items found matching your filter.</p>

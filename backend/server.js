@@ -17,6 +17,7 @@ const dashboardRoutes = require("./routes/dashboardRoutes");
 const adminRoutes = require("./routes/adminRoutes");
 const foodRoutes = require("./routes/foodRoutes");
 const announcementRoutes = require("./routes/announcementRoutes");
+const orderRoutes = require("./routes/orderRoutes");
 const { notFound, errorHandler } = require("./middleware/errorMiddleware");
 
 if (!process.env.MONGO_URI || !process.env.JWT_SECRET) {
@@ -68,7 +69,8 @@ app.get("/", (req, res) => {
 app.use(
   rateLimit({
     windowMs: 15 * 60 * 1000,
-    limit: 100,
+    // A single page makes several API calls, so this is per-IP headroom, not a login limit
+    limit: 300,
     standardHeaders: "draft-8",
     legacyHeaders: false,
     message: { message: "Too many requests. Please try again later." }
@@ -81,6 +83,7 @@ app.use("/api/dashboard", dashboardRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/foods", foodRoutes);
 app.use("/api/announcements", announcementRoutes);
+app.use("/api/orders", orderRoutes);
 
 app.use(notFound);
 app.use(errorHandler);

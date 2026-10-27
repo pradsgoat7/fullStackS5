@@ -1,20 +1,21 @@
 import React, { useState } from 'react';
-import { CartContext, type CartItem } from './cartContext';
+import { CartContext, type CartContextValue, type CartItem } from './cartContext';
+
+// The server allows up to 10 of one item per order
+const MAX_QUANTITY = 10;
 
 export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     const [cart, setCart] = useState<CartItem[]>([]);
 
-    const addToCart = (item: { name: string; price: string }) => {
-        const numericPrice = parseInt(item.price.replace(/[^0-9]/g, ''), 10);
-
+    const addToCart: CartContextValue['addToCart'] = (item) => {
         setCart((prevCart) => {
-            const existing = prevCart.find((i) => i.name === item.name);
+            const existing = prevCart.find((i) => i.id === item.id);
             if (existing) {
                 return prevCart.map((i) =>
-                    i.name === item.name ? { ...i, quantity: i.quantity + 1 } : i
+                    i.id === item.id ? { ...i, quantity: Math.min(MAX_QUANTITY, i.quantity + 1) } : i
                 );
             }
-            return [...prevCart, { id: Date.now().toString(), name: item.name, price: numericPrice, quantity: 1 }];
+            return [...prevCart, { id: item.id, name: item.name, price: item.price, quantity: 1 }];
         });
     };
 

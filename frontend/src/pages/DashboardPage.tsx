@@ -1,10 +1,14 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Users, Clock, Armchair, ArrowUpRight, Flame, Search, ShoppingBag, Trash2, CheckCircle2 } from 'lucide-react';
+import { Users, Clock, Armchair, ArrowUpRight, Flame, Search, ShoppingBag, Trash2, CheckCircle2, ChefHat } from 'lucide-react';
 import { useCart } from '../hooks/useCart';
 import { useMenuItems } from '../hooks/useMenuItems';
 import { useAuth } from '../hooks/useAuth';
 import { useProtectedData } from '../hooks/useProtectedData';
+import { useOrders } from '../hooks/useOrders';
+import { FoodCard } from '../components/menu/FoodCard';
+import { StatusBadge } from '../components/orders/StatusBadge';
+import { formatPrice } from '../lib/format';
 import type { AuthUser } from '../types/auth';
 import { CheckoutForm, type CheckoutFormValues } from '../components/cart/CheckoutForm';
 import { LiveAnnouncements } from '../components/realtime/LiveAnnouncements';
@@ -18,17 +22,33 @@ export const DashboardPage: React.FC = () => {
   const firstName = (dashboard.data?.user.name ?? user?.name ?? '').split(' ')[0];
   const [searchQuery, setSearchQuery] = useState('');
   const [isPlacingOrder, setIsPlacingOrder] = useState(false);
-  const [confirmedOrder, setConfirmedOrder] = useState<{ token: string; name: string } | null>(null);
+  const [confirmedOrder, setConfirmedOrder] = useState<{ token: string; total: number } | null>(null);
+  const [orderError, setOrderError] = useState<string | null>(null);
+  const { placeOrder, activeOrders, queue } = useOrders();
 
-  const handlePlaceOrder = (values: CheckoutFormValues) => {
+  const handlePlaceOrder = async (values: CheckoutFormValues) => {
     setIsPlacingOrder(true);
-    setTimeout(() => {
-      const token = `CE-${Math.floor(1000 + Math.random() * 9000)}`;
-      setConfirmedOrder({ token, name: values.name.trim() });
-      setIsPlacingOrder(false);
+    setOrderError(null);
+    try {
+      const order = await placeOrder({
+        items: cart.map((item) => ({ food: item.id, quantity: item.quantity })),
+        pickupSlot: values.pickupSlot,
+        rollNumber: values.rollNumber.trim(),
+      });
+      setConfirmedOrder({ token: order.token, total: order.total });
       clearCart();
-    }, 700);
+    } catch (err) {
+      setOrderError(err instanceof Error ? err.message : 'Could not place the order');
+    } finally {
+      setIsPlacingOrder(false);
+    }
   };
+
+  const queueLength = queue?.activeOrders;
+  const rush = queueLength === undefined ? null
+    : queueLength <= 3 ? { label: 'Quiet', className: 'text-emerald-600 bg-emerald-50' }
+    : queueLength <= 8 ? { label: 'Moderate Rush', className: 'text-amber-600 bg-amber-50' }
+    : { label: 'Busy', className: 'text-red-600 bg-red-50' };
 
   const quickBites = menuItems.filter((item) => item.category === 'Quick Bites' || item.category === 'Beverages');
 
@@ -52,6 +72,31 @@ export const DashboardPage: React.FC = () => {
         </div>
       </div>
 
+      {/* Active order: live status, links to My Orders */}
+      {activeOrders.length > 0 && (
+        <Link
+          to="/my-orders"
+          className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-orange-50 border border-orange-200 hover:border-orange-300 rounded-2xl px-6 py-4 transition-colors"
+        >
+          <div className="flex items-center gap-3">
+            <div className="p-2 bg-orange-500 text-white rounded-xl">
+              <ChefHat className="w-5 h-5" />
+            </div>
+            <div>
+              <p className="text-sm font-bold text-slate-900">
+                Your order {activeOrders[0].token}
+                {activeOrders.length > 1 && <span className="font-medium text-slate-500"> and {activeOrders.length - 1} more</span>}
+              </p>
+              <p className="text-xs text-slate-500">Pickup: {activeOrders[0].pickupSlot}</p>
+            </div>
+          </div>
+          <div className="flex items-center gap-3">
+            <StatusBadge status={activeOrders[0].status} />
+            <span className="text-xs font-semibold text-orange-600">Track →</span>
+          </div>
+        </Link>
+      )}
+
       {/* Queue Status Widgets Grid */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm relative overflow-hidden">
@@ -62,10 +107,10 @@ export const DashboardPage: React.FC = () => {
             </div>
           </div>
           <div className="mt-4 flex items-baseline gap-2">
-            <span className="text-3xl font-bold text-slate-900">14</span>
-            <span className="text-xs font-medium text-amber-600 bg-amber-50 px-2 py-0.5 rounded-full">Moderate Rush</span>
+            <span className="text-3xl font-bold text-slate-900">{queueLength ?? '—'}</span>
+            {rush && <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${rush.className}`}>{rush.label}</span>}
           </div>
-          <p className="text-xs text-slate-500 mt-2">~6 orders ahead of your typical spot</p>
+          <p className="text-xs text-slate-500 mt-2">Orders waiting to be prepared right now</p>
         </div>
 
         <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
@@ -76,10 +121,10 @@ export const DashboardPage: React.FC = () => {
             </div>
           </div>
           <div className="mt-4 flex items-baseline gap-2">
-            <span className="text-3xl font-bold text-slate-900">12</span>
+            <span className="text-3xl font-bold text-slate-900">{queue ? queue.estimatedWaitMinutes : '—'}</span>
             <span className="text-sm font-semibold text-slate-600">mins</span>
           </div>
-          <p className="text-xs text-slate-500 mt-2">Based on current kitchen load</p>
+          <p className="text-xs text-slate-500 mt-2">About 3 minutes per order in the queue</p>
         </div>
 
         <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
@@ -138,31 +183,7 @@ export const DashboardPage: React.FC = () => {
                 </div>
               ))
             ) : filteredBites.length > 0 ? (
-              filteredBites.map((item) => (
-                <div key={item.id} className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm hover:shadow-md transition-shadow flex flex-col justify-between">
-                  <div>
-                    <div className="h-36 w-full overflow-hidden relative">
-                      <img src={item.image} alt={item.name} className="w-full h-full object-cover hover:scale-105 transition-transform duration-300" />
-                      <span className="absolute top-3 left-3 text-[10px] font-bold tracking-wider uppercase bg-white/90 backdrop-blur-sm text-orange-600 px-2.5 py-1 rounded-full shadow-sm">
-                        {item.tag}
-                      </span>
-                    </div>
-                    <div className="p-4">
-                      <h4 className="font-semibold text-slate-900 text-sm">{item.name}</h4>
-                      <span className="text-xs font-medium text-slate-400">{item.time} prep time</span>
-                    </div>
-                  </div>
-                  <div className="p-4 pt-0 flex items-center justify-between border-t border-slate-100 mt-2">
-                    <span className="text-base font-bold text-slate-900">{item.price}</span>
-                    <button
-                      onClick={() => addToCart(item)}
-                      className="bg-orange-500 hover:bg-orange-600 text-white px-3.5 py-1.5 rounded-xl text-xs font-semibold shadow-sm shadow-orange-500/25 transition-all active:scale-95"
-                    >
-                      Pre-Order
-                    </button>
-                  </div>
-                </div>
-              ))
+              filteredBites.map((item) => <FoodCard key={item.id} item={item} onAdd={addToCart} />)
             ) : (
               <p className="text-sm text-slate-500 col-span-2 text-center py-8">No quick bites match your search.</p>
             )}
@@ -185,15 +206,20 @@ export const DashboardPage: React.FC = () => {
             {confirmedOrder ? (
               <div className="py-10 text-center">
                 <CheckCircle2 className="w-10 h-10 text-emerald-500 mx-auto" />
-                <p className="text-sm font-semibold text-slate-900 mt-3">Thanks, {confirmedOrder.name}!</p>
-                <p className="text-xs text-slate-500 mt-1">Your pre-order is confirmed. Show this token at pickup.</p>
+                <p className="text-sm font-semibold text-slate-900 mt-3">Thanks, {firstName}! Order placed.</p>
+                <p className="text-xs text-slate-500 mt-1">Show this token at pickup · {formatPrice(confirmedOrder.total)}</p>
                 <p className="text-2xl font-bold text-orange-600 mt-3 tracking-wide">{confirmedOrder.token}</p>
-                <button
-                  onClick={() => setConfirmedOrder(null)}
-                  className="mt-5 text-xs font-semibold text-orange-600 hover:text-orange-700"
-                >
-                  Place another order
-                </button>
+                <div className="mt-5 flex items-center justify-center gap-4">
+                  <Link to="/my-orders" className="text-xs font-semibold text-white bg-orange-500 hover:bg-orange-600 px-3.5 py-2 rounded-xl">
+                    Track order
+                  </Link>
+                  <button
+                    onClick={() => setConfirmedOrder(null)}
+                    className="text-xs font-semibold text-orange-600 hover:text-orange-700"
+                  >
+                    Place another order
+                  </button>
+                </div>
               </div>
             ) : cart.length === 0 ? (
               <div className="py-12 text-center">
@@ -208,13 +234,14 @@ export const DashboardPage: React.FC = () => {
                       <div>
                         <h4 className="text-xs font-semibold text-slate-900">{cartItem.name}</h4>
                         <span className="text-[11px] text-slate-500">
-                          ₹{cartItem.price} × {cartItem.quantity}
+                          {formatPrice(cartItem.price)} × {cartItem.quantity}
                         </span>
                       </div>
                       <div className="flex items-center gap-3">
-                        <span className="text-xs font-bold text-slate-900">₹{cartItem.price * cartItem.quantity}</span>
+                        <span className="text-xs font-bold text-slate-900">{formatPrice(cartItem.price * cartItem.quantity)}</span>
                         <button
                           onClick={() => removeFromCart(cartItem.id)}
+                          aria-label={`Remove ${cartItem.name}`}
                           className="text-slate-400 hover:text-red-500 transition-colors p-1"
                         >
                           <Trash2 className="w-4 h-4" />
@@ -224,7 +251,7 @@ export const DashboardPage: React.FC = () => {
                   ))}
                 </div>
 
-                <CheckoutForm totalPrice={totalPrice} isSubmitting={isPlacingOrder} onSubmit={handlePlaceOrder} />
+                <CheckoutForm customerName={user?.name ?? ''} totalPrice={totalPrice} isSubmitting={isPlacingOrder} error={orderError} onSubmit={handlePlaceOrder} />
               </div>
             )}
           </div>

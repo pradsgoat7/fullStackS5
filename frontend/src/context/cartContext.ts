@@ -1,6 +1,8 @@
 import { createContext } from 'react';
+import type { MenuItem } from '../types/menu';
 
 export interface CartItem {
+    /** The menu item's database id */
     id: string;
     name: string;
     price: number;
@@ -9,7 +11,7 @@ export interface CartItem {
 
 export interface CartContextValue {
     cart: CartItem[];
-    addToCart: (item: { name: string; price: string }) => void;
+    addToCart: (item: Pick<MenuItem, 'id' | 'name' | 'price'>) => void;
     removeFromCart: (id: string) => void;
     clearCart: () => void;
     totalItemsCount: number;

@@ -1,27 +1,25 @@
 import React from 'react';
 import { useForm } from '../../hooks/useForm';
+import { PICKUP_SLOTS } from '../../types/order';
+import { formatPrice } from '../../lib/format';
 
 export interface CheckoutFormValues {
-    name: string;
     rollNumber: string;
     pickupSlot: string;
     [key: string]: string;
 }
 
 interface CheckoutFormProps {
+    customerName: string;
     totalPrice: number;
     isSubmitting: boolean;
+    /** Message from the server, e.g. an item sold out */
+    error: string | null;
     onSubmit: (values: CheckoutFormValues) => void;
 }
 
-const PICKUP_SLOTS = ['ASAP (Next Available)', '12:30 PM - 1:00 PM', '1:00 PM - 1:30 PM', '1:30 PM - 2:00 PM'];
-
 const validate = (values: CheckoutFormValues) => {
     const errors: Partial<Record<keyof CheckoutFormValues, string>> = {};
-
-    if (!values.name.trim()) {
-        errors.name = 'Name is required';
-    }
 
     if (!values.rollNumber.trim()) {
         errors.rollNumber = 'Roll number is required';
@@ -40,29 +38,17 @@ const inputClasses = (hasError: boolean) =>
     `mt-1 w-full text-sm px-3 py-2 rounded-xl border bg-white focus:outline-none focus:border-orange-400 ${hasError ? 'border-red-300' : 'border-slate-200'
     }`;
 
-export const CheckoutForm: React.FC<CheckoutFormProps> = ({ totalPrice, isSubmitting, onSubmit }) => {
+export const CheckoutForm: React.FC<CheckoutFormProps> = ({ customerName, totalPrice, isSubmitting, error, onSubmit }) => {
     const { values, errors, touched, handleChange, handleBlur, handleSubmit } = useForm<CheckoutFormValues>(
-        { name: '', rollNumber: '', pickupSlot: '' },
+        { rollNumber: '', pickupSlot: '' },
         validate
     );
 
     return (
         <form onSubmit={handleSubmit(onSubmit)} className="pt-4 border-t border-slate-100 space-y-3">
-            <div>
-                <label htmlFor="checkout-name" className="text-[11px] font-semibold text-slate-500 uppercase tracking-wide">
-                    Full Name
-                </label>
-                <input
-                    id="checkout-name"
-                    type="text"
-                    value={values.name}
-                    onChange={(e) => handleChange('name', e.target.value)}
-                    onBlur={() => handleBlur('name')}
-                    placeholder="e.g. Pradnyesh Patil"
-                    className={inputClasses(Boolean(touched.name && errors.name))}
-                />
-                {touched.name && errors.name && <p className="text-[11px] text-red-500 mt-1">{errors.name}</p>}
-            </div>
+            <p className="text-xs text-slate-500">
+                Ordering as <span className="font-semibold text-slate-700">{customerName}</span>
+            </p>
 
             <div>
                 <label htmlFor="checkout-roll" className="text-[11px] font-semibold text-slate-500 uppercase tracking-wide">
@@ -74,7 +60,7 @@ export const CheckoutForm: React.FC<CheckoutFormProps> = ({ totalPrice, isSubmit
                     value={values.rollNumber}
                     onChange={(e) => handleChange('rollNumber', e.target.value)}
                     onBlur={() => handleBlur('rollNumber')}
-                    placeholder="e.g. INFT2024-045"
+                    placeholder="e.g. D15B-36"
                     className={inputClasses(Boolean(touched.rollNumber && errors.rollNumber))}
                 />
                 {touched.rollNumber && errors.rollNumber && (
@@ -107,8 +93,10 @@ export const CheckoutForm: React.FC<CheckoutFormProps> = ({ totalPrice, isSubmit
 
             <div className="flex justify-between text-sm pt-1">
                 <span className="text-slate-500">Total Amount</span>
-                <span className="font-bold text-slate-900">₹{totalPrice}</span>
+                <span className="font-bold text-slate-900">{formatPrice(totalPrice)}</span>
             </div>
+
+            {error && <p className="text-xs text-red-600 bg-red-50 border border-red-200 rounded-xl px-3 py-2">{error}</p>}
 
             <button
                 type="submit"

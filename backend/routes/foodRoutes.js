@@ -32,7 +32,11 @@ const foodRules = (isUpdate) => {
       .isLength({ max: 300 }).withMessage("Description must be at most 300 characters"),
     field("stock")
       .isInt({ min: 0 }).withMessage("Stock must be a whole number of 0 or more")
-      .toInt()
+      .toInt(),
+    body("image").optional().isURL({ protocols: ["https"], require_protocol: true }).withMessage("Image must be an https URL"),
+    body("prepTime").optional().isInt({ min: 0, max: 120 }).withMessage("Prep time must be 0 to 120 minutes").toInt(),
+    body("tag").optional().isString().trim().isLength({ max: 30 }).withMessage("Tag must be at most 30 characters"),
+    body("available").optional().isBoolean().withMessage("Available must be true or false").toBoolean()
   ];
 };
 

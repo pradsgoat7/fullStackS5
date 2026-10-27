@@ -25,7 +25,8 @@ module.exports = {
   tags: [
     { name: "Auth", description: "Register, login and the current user" },
     { name: "Protected", description: "Routes that need a valid JWT" },
-    { name: "Foods", description: "Menu items (writes are admin only)" }
+    { name: "Foods", description: "Menu items (writes are admin only)" },
+    { name: "Orders", description: "Pre-orders and their status" }
   ],
   components: {
     securitySchemes: {
@@ -140,6 +141,44 @@ module.exports = {
           content: { "application/json": { example: { title: "Today's Special", body: "South Indian Thali available 1:00–2:30 PM." } } }
         },
         responses: { 201: { description: "Created and broadcast over Socket.IO" }, 400: { description: "Validation failed" }, 401: unauthorized, 403: forbidden }
+      }
+    },
+    "/api/orders": {
+      post: {
+        tags: ["Orders"],
+        summary: "Place a pre-order (prices and stock checked on the server)",
+        security: [{ bearerAuth: [] }],
+        requestBody: {
+          required: true,
+          content: { "application/json": { example: { items: [{ food: "<food id>", quantity: 2 }], pickupSlot: "12:30 PM - 1:00 PM", rollNumber: "D15B-36" } } }
+        },
+        responses: { 201: { description: "Order created with a pickup token" }, 400: { description: "Validation failed" }, 401: unauthorized, 409: message("Not enough stock") }
+      },
+      get: {
+        tags: ["Orders"],
+        summary: "All active orders, oldest first (staff/admin; ?scope=all for every order)",
+        security: [{ bearerAuth: [] }],
+        responses: { 200: { description: "Orders" }, 401: unauthorized, 403: forbidden }
+      }
+    },
+    "/api/orders/mine": {
+      get: { tags: ["Orders"], summary: "The logged-in user's orders", security: [{ bearerAuth: [] }], responses: { 200: { description: "Orders, newest first" }, 401: unauthorized } }
+    },
+    "/api/orders/queue": {
+      get: { tags: ["Orders"], summary: "Live queue size and estimated wait", security: [{ bearerAuth: [] }], responses: { 200: { description: "activeOrders, estimatedWaitMinutes" }, 401: unauthorized } }
+    },
+    "/api/orders/{id}/cancel": {
+      parameters: [{ name: "id", in: "path", required: true, schema: { type: "string" } }],
+      patch: { tags: ["Orders"], summary: "Cancel my order while it is still 'placed'", security: [{ bearerAuth: [] }], responses: { 200: { description: "Cancelled" }, 404: message("Not found"), 409: message("Already being prepared") } }
+    },
+    "/api/orders/{id}/status": {
+      parameters: [{ name: "id", in: "path", required: true, schema: { type: "string" } }],
+      patch: {
+        tags: ["Orders"],
+        summary: "Move an order to its next status (staff/admin)",
+        security: [{ bearerAuth: [] }],
+        requestBody: { required: true, content: { "application/json": { example: { status: "preparing" } } } },
+        responses: { 200: { description: "Updated and pushed to the student over Socket.IO" }, 403: forbidden, 409: message("Invalid status change") }
       }
     },
     "/api/foods": {

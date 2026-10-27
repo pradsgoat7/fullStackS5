@@ -165,6 +165,103 @@ describe("food CRUD", () => {
   });
 });
 
+describe("orders", () => {
+  const slot = "1:00 PM - 1:30 PM";
+  let foodId;
+  let orderId;
+
+  it("places an order with server-side prices and reserves stock", async () => {
+    const food = await call("POST", "/api/foods", {
+      body: { name: "Veg Biryani", price: 130, category: "Meals & Thalis", stock: 3 },
+      token: adminToken
+    });
+    foodId = food.body._id;
+
+    // A price sent by the browser is ignored
+    const res = await call("POST", "/api/orders", {
+      body: { items: [{ food: foodId, quantity: 2, price: 1 }], pickupSlot: slot, rollNumber: "D15B-36" },
+      token: studentToken
+    });
+    assert.equal(res.status, 201);
+    assert.equal(res.body.total, 260);
+    assert.equal(res.body.status, "placed");
+    assert.match(res.body.token, /^CE-[0-9A-F]{5}$/);
+    assert.equal(res.body.customerName, STUDENT.name);
+    orderId = res.body._id;
+
+    assert.equal((await call("GET", `/api/foods/${foodId}`)).body.stock, 1);
+  });
+
+  it("rejects bad orders", async () => {
+    const order = { items: [{ food: foodId, quantity: 1 }], pickupSlot: slot, rollNumber: "D15B-36" };
+    assert.equal((await call("POST", "/api/orders", { body: order })).status, 401);
+    assert.equal((await call("POST", "/api/orders", { body: { ...order, pickupSlot: "midnight" }, token: studentToken })).status, 400);
+    assert.equal((await call("POST", "/api/orders", { body: { ...order, items: [] }, token: studentToken })).status, 400);
+    const tooMany = await call("POST", "/api/orders", { body: { ...order, items: [{ food: foodId, quantity: 2 }] }, token: studentToken });
+    assert.equal(tooMany.status, 409);
+    assert.match(tooMany.body.message, /only 1 Veg Biryani left/);
+  });
+
+  it("lists my orders and the live queue", async () => {
+    const mine = await call("GET", "/api/orders/mine", { token: studentToken });
+    assert.equal(mine.status, 200);
+    assert.equal(mine.body.length, 1);
+    const queue = await call("GET", "/api/orders/queue", { token: studentToken });
+    assert.deepEqual(queue.body, { activeOrders: 1, estimatedWaitMinutes: 3 });
+  });
+
+  it("only staff and admins can see all orders and change status", async () => {
+    assert.equal((await call("GET", "/api/orders", { token: studentToken })).status, 403);
+    const res = await call("PATCH", `/api/orders/${orderId}/status`, { body: { status: "preparing" }, token: studentToken });
+    assert.equal(res.status, 403);
+    const all = await call("GET", "/api/orders", { token: adminToken });
+    assert.equal(all.body.length, 1);
+  });
+
+  it("pushes status changes to the student live and enforces the order of steps", async () => {
+    const socket = await connectSocket(studentToken);
+    try {
+      const pushed = new Promise((resolve) => socket.on("order:updated", resolve));
+      const res = await call("PATCH", `/api/orders/${orderId}/status`, { body: { status: "preparing" }, token: adminToken });
+      assert.equal(res.status, 200);
+      assert.equal((await pushed).status, "preparing");
+    } finally {
+      socket.close();
+    }
+    const skip = await call("PATCH", `/api/orders/${orderId}/status`, { body: { status: "collected" }, token: adminToken });
+    assert.equal(skip.status, 409);
+  });
+
+  it("students can cancel only before preparation starts, and stock is restored", async () => {
+    assert.equal((await call("PATCH", `/api/orders/${orderId}/cancel`, { token: studentToken })).status, 409);
+
+    const second = await call("POST", "/api/orders", {
+      body: { items: [{ food: foodId, quantity: 1 }], pickupSlot: slot, rollNumber: "D15B-36" },
+      token: studentToken
+    });
+    assert.equal((await call("GET", `/api/foods/${foodId}`)).body.stock, 0);
+    const cancelled = await call("PATCH", `/api/orders/${second.body._id}/cancel`, { token: studentToken });
+    assert.equal(cancelled.body.status, "cancelled");
+    assert.equal((await call("GET", `/api/foods/${foodId}`)).body.stock, 1);
+  });
+});
+
+describe("profile", () => {
+  it("updates the name and changes the password", async () => {
+    const renamed = await call("PUT", "/api/auth/profile", { body: { name: "Test Student Renamed" }, token: studentToken });
+    assert.equal(renamed.body.user.name, "Test Student Renamed");
+    STUDENT.name = "Test Student Renamed";
+
+    const wrong = await call("PUT", "/api/auth/password", { body: { currentPassword: "nope", newPassword: "NewPass1234" }, token: studentToken });
+    assert.equal(wrong.status, 401);
+    const ok = await call("PUT", "/api/auth/password", { body: { currentPassword: STUDENT.password, newPassword: "NewPass1234" }, token: studentToken });
+    assert.equal(ok.status, 200);
+    const login = await call("POST", "/api/auth/login", { body: { email: STUDENT.email, password: "NewPass1234" } });
+    assert.equal(login.status, 200);
+    STUDENT.password = "NewPass1234";
+  });
+});
+
 describe("real-time (Socket.IO)", () => {
   it("rejects a socket with a forged token", async () => {
     await assert.rejects(connectSocket("forged.jwt.token"), /Invalid or malformed token/);
