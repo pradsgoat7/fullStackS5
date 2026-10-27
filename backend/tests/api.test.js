@@ -195,6 +195,7 @@ describe("orders", () => {
   it("rejects bad orders", async () => {
     const order = { items: [{ food: foodId, quantity: 1 }], pickupSlot: slot, rollNumber: "D15B-36" };
     assert.equal((await call("POST", "/api/orders", { body: order })).status, 401);
+    assert.equal((await call("POST", "/api/orders", { body: order, token: adminToken })).status, 403);
     assert.equal((await call("POST", "/api/orders", { body: { ...order, pickupSlot: "midnight" }, token: studentToken })).status, 400);
     assert.equal((await call("POST", "/api/orders", { body: { ...order, items: [] }, token: studentToken })).status, 400);
     const tooMany = await call("POST", "/api/orders", { body: { ...order, items: [{ food: foodId, quantity: 2 }] }, token: studentToken });
@@ -220,13 +221,21 @@ describe("orders", () => {
 
   it("pushes status changes to the student live and enforces the order of steps", async () => {
     const socket = await connectSocket(studentToken);
+    const staffSocket = await connectSocket(adminToken);
     try {
+      // The admin must not receive the student's update as one of their own orders
+      let staffGotOwnEvent = false;
+      staffSocket.on("order:updated", () => { staffGotOwnEvent = true; });
+      const staffPushed = new Promise((resolve) => staffSocket.on("staff:order-updated", resolve));
       const pushed = new Promise((resolve) => socket.on("order:updated", resolve));
       const res = await call("PATCH", `/api/orders/${orderId}/status`, { body: { status: "preparing" }, token: adminToken });
       assert.equal(res.status, 200);
       assert.equal((await pushed).status, "preparing");
+      assert.equal((await staffPushed).status, "preparing");
+      assert.equal(staffGotOwnEvent, false);
     } finally {
       socket.close();
+      staffSocket.close();
     }
     const skip = await call("PATCH", `/api/orders/${orderId}/status`, { body: { status: "collected" }, token: adminToken });
     assert.equal(skip.status, 409);

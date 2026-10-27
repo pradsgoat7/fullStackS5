@@ -3,9 +3,13 @@ import { Search, UtensilsCrossed, Sparkles } from 'lucide-react';
 import { useCart } from '../hooks/useCart';
 import { useMenuItems } from '../hooks/useMenuItems';
 import { FoodCard } from '../components/menu/FoodCard';
+import { useAuth } from '../hooks/useAuth';
 
 export const MenuPage: React.FC = () => {
     const { addToCart } = useCart();
+    const { user } = useAuth();
+    // Only students order; staff see the menu with stock levels instead
+    const canOrder = user?.role === 'student';
     const { items: menuItems, isLoading, error } = useMenuItems();
     const [searchQuery, setSearchQuery] = useState('');
     const [selectedCategory, setSelectedCategory] = useState('All');
@@ -84,7 +88,7 @@ export const MenuPage: React.FC = () => {
             ) : (
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 {filteredItems.length > 0 ? (
-                    filteredItems.map((item) => <FoodCard key={item.id} item={item} onAdd={addToCart} detailed />)
+                    filteredItems.map((item) => <FoodCard key={item.id} item={item} onAdd={canOrder ? addToCart : undefined} detailed />)
                 ) : (
                     <div className="col-span-3 text-center py-12 bg-white rounded-2xl border border-slate-200">
                         <p className="text-slate-500 text-sm font-medium">No menu items found matching your filter.</p>

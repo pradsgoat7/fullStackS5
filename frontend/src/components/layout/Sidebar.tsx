@@ -44,12 +44,14 @@ const navItems: NavItem[] = [
     label: 'My Orders',
     path: '/my-orders',
     icon: ShoppingBag,
+    roles: ['student'],
   },
   {
     id: 'order-history',
     label: 'Order History',
     path: '/order-history',
     icon: Clock,
+    roles: ['student'],
   },
   {
     id: 'profile',

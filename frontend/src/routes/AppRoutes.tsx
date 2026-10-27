@@ -30,8 +30,11 @@ export const AppRoutes: React.FC = () => {
             <Route path="/dashboard" element={<Navigate to="/" replace />} />
             <Route path="/menu" element={<MenuPage />} />
             <Route path="/chat" element={<ChatPage />} />
-            <Route path="/my-orders" element={<MyOrdersPage />} />
-            <Route path="/order-history" element={<OrderHistoryPage />} />
+            {/* Students only: staff manage orders from the Admin Panel */}
+            <Route element={<ProtectedRoute roles={['student']} />}>
+              <Route path="/my-orders" element={<MyOrdersPage />} />
+              <Route path="/order-history" element={<OrderHistoryPage />} />
+            </Route>
             <Route path="/profile" element={<ProfilePage />} />
 
             {/* Admin only */}

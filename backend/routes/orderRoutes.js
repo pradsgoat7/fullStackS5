@@ -23,7 +23,8 @@ const queueStats = async () => {
   return { activeOrders, estimatedWaitMinutes: activeOrders * MINUTES_PER_ORDER };
 };
 
-// Push an order change to its owner, to canteen staff, and the new queue size to everyone
+// Push an order change to its owner, to canteen staff, and the new queue size to everyone.
+// Staff events have their own names so a staff member's own order list never picks them up.
 const broadcast = async (req, order, staffEvent) => {
   const io = req.app.get("io");
   io.to(`user:${order.user}`).emit("order:updated", order);
@@ -37,10 +38,11 @@ const restock = (items) =>
 // Short, readable pickup code, e.g. CE-7K2QF
 const newToken = () => `CE-${crypto.randomBytes(4).toString("hex").slice(0, 5).toUpperCase()}`;
 
-// 1. PLACE AN ORDER (any logged-in user)
+// 1. PLACE AN ORDER (students only; canteen staff manage orders, they don't place them)
 router.post(
   "/",
   protect,
+  authorize("student"),
   [
     body("items").isArray({ min: 1, max: 20 }).withMessage("Your cart is empty"),
     body("items.*.food").isMongoId().withMessage("Invalid menu item"),
@@ -114,7 +116,7 @@ router.post(
       return res.status(500).json({ message: "Could not create the order, please try again" });
     }
 
-    await broadcast(req, order, "order:new");
+    await broadcast(req, order, "staff:order-new");
     res.status(201).json(order);
   }
 );
@@ -143,7 +145,7 @@ router.patch("/:id/cancel", protect, idRule, validate, async (req, res) => {
   order.status = "cancelled";
   await order.save();
   await restock(order.items);
-  await broadcast(req, order, "order:updated");
+  await broadcast(req, order, "staff:order-updated");
   res.status(200).json(order);
 });
 
@@ -188,7 +190,7 @@ router.patch(
     if (status === "cancelled") {
       await restock(order.items);
     }
-    await broadcast(req, order, "order:updated");
+    await broadcast(req, order, "staff:order-updated");
     res.status(200).json(order);
   }
 );

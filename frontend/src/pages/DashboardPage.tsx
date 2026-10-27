@@ -44,6 +44,9 @@ export const DashboardPage: React.FC = () => {
     }
   };
 
+  // Only students order; staff manage the queue from the Admin Panel
+  const canOrder = user?.role === 'student';
+
   const queueLength = queue?.activeOrders;
   const rush = queueLength === undefined ? null
     : queueLength <= 3 ? { label: 'Quiet', className: 'text-emerald-600 bg-emerald-50' }
@@ -183,15 +186,25 @@ export const DashboardPage: React.FC = () => {
                 </div>
               ))
             ) : filteredBites.length > 0 ? (
-              filteredBites.map((item) => <FoodCard key={item.id} item={item} onAdd={addToCart} />)
+              filteredBites.map((item) => <FoodCard key={item.id} item={item} onAdd={canOrder ? addToCart : undefined} />)
             ) : (
               <p className="text-sm text-slate-500 col-span-2 text-center py-8">No quick bites match your search.</p>
             )}
           </div>
         </div>
 
-        {/* Right 1 Column: Live Pre-Order Cart State */}
+        {/* Right 1 Column: Live Pre-Order Cart State (students) or a link to the order queue (staff) */}
         <div className="space-y-4">
+          {!canOrder ? (
+          <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm sticky top-24 text-center">
+            <ChefHat className="w-10 h-10 text-orange-500 mx-auto" />
+            <p className="text-sm font-semibold text-slate-900 mt-3">Canteen staff view</p>
+            <p className="text-xs text-slate-500 mt-1">Students place orders. Manage incoming orders from the live queue.</p>
+            <Link to="/admin" className="mt-5 inline-flex text-xs font-semibold text-white bg-orange-500 hover:bg-orange-600 px-3.5 py-2 rounded-xl">
+              Open live order queue
+            </Link>
+          </div>
+          ) : (
           <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm sticky top-24">
             <div className="flex items-center justify-between pb-4 border-b border-slate-100">
               <h3 className="font-bold text-slate-900 flex items-center gap-2">
@@ -255,6 +268,7 @@ export const DashboardPage: React.FC = () => {
               </div>
             )}
           </div>
+          )}
         </div>
 
       </div>

@@ -16,7 +16,7 @@ export const AccessDeniedPage: React.FC = () => {
         <h1 className="text-xl font-bold text-slate-900 mt-1">Access denied</h1>
         <p className="text-sm text-slate-500 mt-2">
           You are signed in as <span className="font-semibold text-slate-700">{user?.name}</span> with the{' '}
-          <span className="font-semibold text-slate-700">{user?.role}</span> role. Only admins can open this page.
+          <span className="font-semibold text-slate-700">{user?.role}</span> role, which can't open this page.
         </p>
         <Link
           to="/"

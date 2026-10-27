@@ -5,7 +5,8 @@ import { formatPrice } from '../../lib/format';
 
 interface FoodCardProps {
   item: MenuItem;
-  onAdd: (item: MenuItem) => void;
+  /** Omit to show the card without a Pre-Order button (e.g. for canteen staff) */
+  onAdd?: (item: MenuItem) => void;
   /** Larger card with the category label, used on the Menu page */
   detailed?: boolean;
 }
@@ -55,6 +56,7 @@ export const FoodCard: React.FC<FoodCardProps> = ({ item, onAdd, detailed = fals
       </div>
       <div className="p-4 pt-0 flex items-center justify-between border-t border-slate-100 mt-2">
         <span className={`${detailed ? 'text-lg' : 'text-base'} font-bold text-slate-900`}>{formatPrice(item.price)}</span>
+        {onAdd && (
         <button
           onClick={() => onAdd(item)}
           disabled={isSoldOut}
@@ -62,6 +64,12 @@ export const FoodCard: React.FC<FoodCardProps> = ({ item, onAdd, detailed = fals
         >
           {isSoldOut ? 'Sold Out' : 'Pre-Order'}
         </button>
+        )}
+        {!onAdd && (
+          <span className={`text-xs font-semibold ${isSoldOut ? 'text-red-500' : 'text-slate-500'}`}>
+            {isSoldOut ? 'Sold out' : `${item.stock} in stock`}
+          </span>
+        )}
       </div>
     </div>
   );

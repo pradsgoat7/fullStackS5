@@ -13,7 +13,8 @@ const upsert = (orders: Order[], order: Order) =>
 
 // The logged-in user's orders and the canteen queue, kept live over Socket.IO
 export const OrdersProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-    const { token, logout } = useAuth();
+    const { token, user, logout } = useAuth();
+    const userId = user?._id;
     const { socket } = useSocket();
     // Keyed by token so a previous user's orders are never shown to the next one
     const [state, setState] = useState<{ token: string | null; orders: Order[] | null; error: string | null }>({
@@ -43,8 +44,11 @@ export const OrdersProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     // Live updates: my orders change status, the queue grows or shrinks; resync after a reconnect
     useEffect(() => {
         if (!socket) return;
-        const onOrder = (order: Order) =>
+        // Only ever add the logged-in user's own orders to this list
+        const onOrder = (order: Order) => {
+            if (order.user !== userId) return;
             setState((prev) => (prev.orders ? { ...prev, orders: upsert(prev.orders, order) } : prev));
+        };
         socket.on('order:updated', onOrder);
         socket.on('queue:update', setQueue);
         socket.io.on('reconnect', load);
@@ -53,7 +57,7 @@ export const OrdersProvider: React.FC<{ children: React.ReactNode }> = ({ childr
             socket.off('queue:update', setQueue);
             socket.io.off('reconnect', load);
         };
-    }, [socket, load]);
+    }, [socket, load, userId]);
 
     const placeOrder = async (newOrder: NewOrder) => {
         const order = await apiRequest<Order>('/api/orders', { method: 'POST', body: newOrder, token });

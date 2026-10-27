@@ -27,11 +27,11 @@ export const OrdersBoard: React.FC = () => {
   useEffect(() => {
     if (!socket) return;
     const onChange = (order: Order) => setChanges((prev) => ({ ...prev, [order._id]: order }));
-    socket.on('order:new', onChange);
-    socket.on('order:updated', onChange);
+    socket.on('staff:order-new', onChange);
+    socket.on('staff:order-updated', onChange);
     return () => {
-      socket.off('order:new', onChange);
-      socket.off('order:updated', onChange);
+      socket.off('staff:order-new', onChange);
+      socket.off('staff:order-updated', onChange);
     };
   }, [socket]);
 

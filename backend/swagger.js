@@ -146,13 +146,13 @@ module.exports = {
     "/api/orders": {
       post: {
         tags: ["Orders"],
-        summary: "Place a pre-order (prices and stock checked on the server)",
+        summary: "Place a pre-order (students only; prices and stock checked on the server)",
         security: [{ bearerAuth: [] }],
         requestBody: {
           required: true,
           content: { "application/json": { example: { items: [{ food: "<food id>", quantity: 2 }], pickupSlot: "12:30 PM - 1:00 PM", rollNumber: "D15B-36" } } }
         },
-        responses: { 201: { description: "Order created with a pickup token" }, 400: { description: "Validation failed" }, 401: unauthorized, 409: message("Not enough stock") }
+        responses: { 201: { description: "Order created with a pickup token" }, 400: { description: "Validation failed" }, 401: unauthorized, 403: forbidden, 409: message("Not enough stock") }
       },
       get: {
         tags: ["Orders"],
